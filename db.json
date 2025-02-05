@@ -1,0 +1,61 @@
+{
+  "books": [
+    {
+      "id": 1,
+      "title": "Le avventure di Tom Sawyer",
+      "author": "Mark Twain",
+      "imageUrl": "https://m.media-amazon.com/images/I/81OthjkJBuL._AC_UF1000,1000_QL80_.jpg",
+      "description": "Un classico racconto di avventure infantili lungo il fiume Mississippi.",
+      "categories": [
+        "Avventura",
+        "Classico"
+      ],
+      "comments": [
+        "Adorato questo libro!",
+        "Un classico da leggere assolutamente."
+      ]
+    },
+    {
+      "id": 2,
+      "title": "L'isola del tesoro",
+      "author": "Robert Louis Stevenson",
+      "imageUrl": "https://m.media-amazon.com/images/I/81hBKhfTrNL._AC_UF1000,1000_QL80_.jpg",
+      "description": "Un'emozionante avventura di pirati piena di tesori sepolti e ammutinamenti.",
+      "categories": [
+        "Avventura",
+        "Pirati"
+      ],
+      "comments": [
+        "Avventura incredibile!",
+        "Mi è piaciuta molto la storia."
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Le avventure di Alice nel Paese delle Meraviglie",
+      "author": "Lewis Carroll",
+      "imageUrl": "https://m.media-amazon.com/images/I/81pO5eUeZpL._AC_UF1000,1000_QL80_.jpg",
+      "description": "Un viaggio fantastico attraverso un mondo popolato da animali parlanti e personaggi stravaganti.",
+      "categories": [
+        "Fantasia",
+        "Classico"
+      ],
+      "comments": [
+        "Una lettura magica!",
+        "Così immaginativo e divertente."
+      ]
+    },
+    {
+      "title": "Nuovo Libro",
+      "author": "Mario Rossi",
+      "imageUrl": "https://m.media-amazon.com/images/I/xxxxx.jpg",
+      "description": "Descrizione del libro.",
+      "categories": [
+        "Romanzo",
+        "Giallo"
+      ],
+      "comments": [],
+      "id": 4
+    }
+  ]
+}
