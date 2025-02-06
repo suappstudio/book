@@ -38,7 +38,7 @@ server.post('/books/:id/comments', (req, res) => {
     .write()
 
   // 5. Risposta con i commenti aggiornati
-  return res.status(201).json(book.comments)
+  return res.status(201).json(book)
 })
 
 // In coda, usiamo le rotte standard di json-server
