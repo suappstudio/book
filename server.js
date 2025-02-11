@@ -1,50 +1,207 @@
-const jsonServer = require('json-server')
-const server = jsonServer.create()
-const router = jsonServer.router('db.json')
-const middlewares = jsonServer.defaults()
+require('dotenv').config();
+const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 
-// Usiamo i middleware di json-server (logging, etc.)
-server.use(middlewares)
+const app = express();
+app.use(express.json());
 
-// Parsing del body in formato JSON
-server.use(jsonServer.bodyParser)
+// Connect to Supabase
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-// Rotta custom per aggiungere un commento
-// Esempio: POST /books/1/comments con body { "comment": "Nuovo commento" }
-server.post('/books/:id/comments', (req, res) => {
-  const db = router.db  // LowDB instance
-  const bookId = parseInt(req.params.id)
-  const { comment } = req.body
+/**
+ * GET /books
+ * Returns all books with their categories.
+ */
+app.get('/books', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(`
+        id, 
+        title, 
+        author, 
+        image_url, 
+        description, 
+        created_at, 
+        category_id, 
+        categories(name) 
+      `);
 
-  // 1. Recupera il libro nel db
-  let book = db.get('books').find({ id: bookId }).value()
-
-  if (!book) {
-    return res.status(404).json({ error: 'Book not found' })
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Error in GET /books', err);
+    res.status(500).json({ error: err.message });
   }
+});
 
-  // 2. Aggiunge il nuovo commento
-  book.comments.push(comment)
+/**
+ * GET /books/:id
+ * Returns a single book with its category and comments.
+ */
+app.get('/books/:id', async (req, res) => {
+  const bookId = parseInt(req.params.id, 10);
 
-  // 3. Se superiamo i 20 commenti, eliminiamo il più vecchio
-  if (book.comments.length > 20) {
-    book.comments.shift()
+  try {
+    const { data: book, error: bookError } = await supabase
+      .from('books')
+      .select(`
+        id, 
+        title, 
+        author, 
+        image_url, 
+        description, 
+        created_at, 
+        category_id, 
+        categories(name),
+        comments(id, comment_text, created_at)
+      `)
+      .eq('id', bookId)
+      .single();
+
+    if (bookError) throw bookError;
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+
+    res.json(book);
+  } catch (err) {
+    console.error('Error in GET /books/:id', err);
+    res.status(500).json({ error: err.message });
   }
+});
 
-  // 4. Scriviamo i cambiamenti nel db
-  db.get('books')
-    .find({ id: bookId })
-    .assign({ comments: book.comments })
-    .write()
+/**
+ * POST /books
+ * Adds a new book (requires a valid category_id).
+ */
+app.post('/books', async (req, res) => {
+  const { category_id, title, author, image_url, description } = req.body;
 
-  // 5. Risposta con i commenti aggiornati
-  return res.status(201).json(book)
-})
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .insert([{ category_id, title, author, image_url, description }])
+      .select('*')
+      .single();
 
-// In coda, usiamo le rotte standard di json-server
-server.use(router)
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Error in POST /books', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// Avvia il server sulla porta 3000 (o un’altra se preferisci)
-server.listen(3000, () => {
-  console.log('JSON Server with custom logic is running on http://localhost:3000')
-})
+/**
+ * POST /books/:id/comments
+ * Adds a new comment to a book (max 20 per book).
+ */
+app.post('/books/:id/comments', async (req, res) => {
+  const bookId = parseInt(req.params.id, 10);
+  const { comment_text } = req.body;
+
+  try {
+    // 1. Ensure the book exists
+    const { data: book, error: bookError } = await supabase
+      .from('books')
+      .select('id')
+      .eq('id', bookId)
+      .single();
+
+    if (bookError || !book) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    // 2. Insert the new comment
+    const { error: insertError } = await supabase
+      .from('comments')
+      .insert([{ book_id: bookId, comment_text }]);
+
+    if (insertError) throw insertError;
+
+    // 3. Get all comments (order oldest first)
+    const { data: comments, error: commentsError } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('book_id', bookId)
+      .order('created_at', { ascending: true });
+
+    if (commentsError) throw commentsError;
+
+    // 4. If > 20 comments, delete the oldest
+    if (comments.length > 20) {
+      const oldestComment = comments[0];
+      await supabase.from('comments').delete().eq('id', oldestComment.id);
+    }
+
+    // 5. Return the updated book with new comments
+    const { data: updatedBook, error: updatedBookError } = await supabase
+      .from('books')
+      .select(`
+        id, 
+        title, 
+        author, 
+        image_url, 
+        description, 
+        created_at, 
+        category_id, 
+        categories(name),
+        comments(id, comment_text, created_at)
+      `)
+      .eq('id', bookId)
+      .single();
+
+    if (updatedBookError) throw updatedBookError;
+
+    res.status(201).json(updatedBook);
+  } catch (err) {
+    console.error('Error in POST /books/:id/comments', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /categories
+ * Returns all categories.
+ */
+app.get('/categories', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('categories').select('*');
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Error in GET /categories', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /categories
+ * Adds a new category.
+ */
+app.post('/categories', async (req, res) => {
+  const { name } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ name }])
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Error in POST /categories', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
