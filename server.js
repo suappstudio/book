@@ -54,10 +54,11 @@ app.get('/books/:id', async (req, res) => {
         author, 
         image_url, 
         description, 
-        created_at, 
+        pages, 
+        year, 
         category_id, 
         categories(name),
-        comments(id, comment_text, created_at)
+        comments(comment_text)
       `)
       .eq('id', bookId)
       .single();
@@ -77,12 +78,15 @@ app.get('/books/:id', async (req, res) => {
  * Adds a new book (requires a valid category_id).
  */
 app.post('/books', async (req, res) => {
-  const { category_id, title, author, image_url, description } = req.body;
+  const { category_id, title, author, image_url, description,pages, year  } = req.body;
 
   try {
     const { data, error } = await supabase
       .from('books')
-      .insert([{ category_id, title, author, image_url, description }])
+      .insert([{ category_id, title, author, image_url, description ,
+        pages: pages || 0,   // Default to 0 if not provided
+                    year: year || 2000
+      }])
       .select('*')
       .single();
 
