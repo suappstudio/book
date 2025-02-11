@@ -2,10 +2,10 @@
     "name": "biblioteca-server",
     "version": "1.0.0",
     "scripts": {
-      "start": "node server.js"
+        "start": "node server.js"
     },
     "dependencies": {
-      "json-server": "^0.17.3"
+        "dotenv": "^16.4.7",
+        "json-server": "^0.17.3"
     }
-  }
-  
+}
