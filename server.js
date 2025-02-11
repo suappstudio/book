@@ -25,9 +25,11 @@ app.get('/books', async (req, res) => {
         author, 
         image_url, 
         description, 
-        created_at, 
+        pages,
+        year,
         category_id, 
         categories(name) 
+        comments(comment_text)
       `);
 
     if (error) throw error;
@@ -151,8 +153,10 @@ app.post('/books/:id/comments', async (req, res) => {
         description, 
         created_at, 
         category_id, 
+        pages,
+        year
         categories(name),
-        comments(id, comment_text, created_at)
+        comments(comment_text)
       `)
       .eq('id', bookId)
       .single();
