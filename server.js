@@ -151,7 +151,7 @@ app.post('/books/:id/comments', async (req, res) => {
         description, 
         created_at, 
         pages,
-        year
+        year,
         categories(name),
         comments(comment_text)
       `)
