@@ -27,8 +27,7 @@ app.get('/books', async (req, res) => {
         description, 
         pages,
         year,
-        category_id, 
-        categories(name) 
+        categories(name), 
         comments(comment_text)
       `);
 
@@ -58,7 +57,6 @@ app.get('/books/:id', async (req, res) => {
         description, 
         pages, 
         year, 
-        category_id, 
         categories(name),
         comments(comment_text)
       `)
@@ -152,7 +150,6 @@ app.post('/books/:id/comments', async (req, res) => {
         image_url, 
         description, 
         created_at, 
-        category_id, 
         pages,
         year
         categories(name),
