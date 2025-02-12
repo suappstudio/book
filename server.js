@@ -27,6 +27,8 @@ app.get('/books', async (req, res) => {
         description, 
         pages,
         year,
+        total_votes,
+        average_rating,
         categories(name), 
         comments(comment_text)
       `);
@@ -57,6 +59,8 @@ app.get('/books/:id', async (req, res) => {
         description, 
         pages, 
         year, 
+        total_votes,
+        average_rating,
         categories(name),
         comments(comment_text)
       `)
@@ -152,6 +156,8 @@ app.post('/books/:id/comments', async (req, res) => {
         created_at, 
         pages,
         year,
+        total_votes,
+        average_rating,
         categories(name),
         comments(comment_text)
       `)
@@ -204,6 +210,44 @@ app.post('/categories', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.post('/books/:id/rate', async (req, res) => {
+  const bookId = parseInt(req.params.id);
+  const { rating } = req.body;
+
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ error: "Rating must be between 1 and 5" });
+  }
+
+  try {
+    const { data: book, error: fetchError } = await supabase
+      .from('books')
+      .select('total_votes, average_rating')
+      .eq('id', bookId)
+      .single();
+
+    if (fetchError || !book) {
+      return res.status(404).json({ error: "Book not found" });
+    }
+
+    // Update rating values
+    const newTotalVotes = book.total_votes + 1;
+    const newAverageRating = (book.average_rating * book.total_votes + rating) / newTotalVotes;
+
+    const { error: updateError } = await supabase
+      .from('books')
+      .update({ total_votes: newTotalVotes, average_rating: newAverageRating })
+      .eq('id', bookId);
+
+    if (updateError) throw updateError;
+
+    res.json({ message: "Rating updated successfully", total_votes: newTotalVotes, average_rating: newAverageRating });
+  } catch (err) {
+    console.error("Error rating book:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;
