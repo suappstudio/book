@@ -220,9 +220,10 @@ app.post('/books/:id/rate', async (req, res) => {
   }
 
   try {
+    // 1. Ensure the book exists
     const { data: book, error: fetchError } = await supabase
       .from('books')
-      .select('total_votes, average_rating')
+      .select('id, total_votes, average_rating')
       .eq('id', bookId)
       .single();
 
@@ -230,10 +231,11 @@ app.post('/books/:id/rate', async (req, res) => {
       return res.status(404).json({ error: "Book not found" });
     }
 
-    // Update rating values
+    // 2. Calculate new rating values
     const newTotalVotes = book.total_votes + 1;
     const newAverageRating = (book.average_rating * book.total_votes + rating) / newTotalVotes;
 
+    // 3. Update the book's rating
     const { error: updateError } = await supabase
       .from('books')
       .update({ total_votes: newTotalVotes, average_rating: newAverageRating })
@@ -241,7 +243,28 @@ app.post('/books/:id/rate', async (req, res) => {
 
     if (updateError) throw updateError;
 
-    res.json({ message: "Rating updated successfully", total_votes: newTotalVotes, average_rating: newAverageRating });
+    // 4. Fetch and return the updated book details
+    const { data: updatedBook, error: updatedBookError } = await supabase
+      .from('books')
+      .select(`
+        id, 
+        title, 
+        author, 
+        image_url, 
+        description, 
+        pages,
+        year,
+        total_votes,
+        average_rating,
+        categories(name),
+        comments(comment_text)
+      `)
+      .eq('id', bookId)
+      .single();
+
+    if (updatedBookError) throw updatedBookError;
+
+    res.status(200).json(updatedBook);
   } catch (err) {
     console.error("Error rating book:", err);
     res.status(500).json({ error: err.message });
