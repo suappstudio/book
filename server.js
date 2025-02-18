@@ -30,7 +30,8 @@ app.get('/books', async (req, res) => {
         total_votes,
         average_rating,
         categories(name), 
-        comments(comment_text)
+        comments(comment_text),
+        age_range
       `);
 
     if (error) throw error;
@@ -62,7 +63,8 @@ app.get('/books/:id', async (req, res) => {
         total_votes,
         average_rating,
         categories(name),
-        comments(comment_text)
+        comments(comment_text),
+        age_range
       `)
       .eq('id', bookId)
       .single();
@@ -159,7 +161,8 @@ app.post('/books/:id/comments', async (req, res) => {
         total_votes,
         average_rating,
         categories(name),
-        comments(comment_text)
+        comments(comment_text),
+        age_range
       `)
       .eq('id', bookId)
       .single();
@@ -257,7 +260,8 @@ app.post('/books/:id/rate', async (req, res) => {
         total_votes,
         average_rating,
         categories(name),
-        comments(comment_text)
+        comments(comment_text),
+        age_range
       `)
       .eq('id', bookId)
       .single();
