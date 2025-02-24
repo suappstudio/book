@@ -1,8 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
+
 app.use(express.json());
 
 // Connect to Supabase
