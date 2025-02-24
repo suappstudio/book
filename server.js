@@ -217,6 +217,74 @@ app.post('/categories', async (req, res) => {
   }
 });
 
+app.put('/comments/:id', async (req, res) => {
+  const commentId = parseInt(req.params.id, 10);
+  const { comment_text } = req.body;
+
+  try {
+    // 1. Verifica se il commento esiste
+    const { data: existingComment, error: fetchError } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('id', commentId)
+      .single();
+
+    if (fetchError || !existingComment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // 2. Aggiorna il testo
+    const { data: updated, error: updateError } = await supabase
+      .from('comments')
+      .update({ comment_text })
+      .eq('id', commentId)
+      .select('*')
+      .single();
+
+    if (updateError) throw updateError;
+
+    // 3. Restituisci il commento aggiornato
+    return res.status(200).json(updated);
+  } catch (err) {
+    console.error('Error in PUT /comments/:id', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/comments/:id', async (req, res) => {
+  const commentId = parseInt(req.params.id, 10);
+
+  try {
+    // 1. Verifica se il commento esiste
+    const { data: existingComment, error: fetchError } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('id', commentId)
+      .single();
+
+    if (fetchError || !existingComment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // 2. Elimina il commento
+    const { error: deleteError } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId);
+
+    if (deleteError) throw deleteError;
+
+    // 3. Rispondi con successo o restituisci la lista commenti aggiornata
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Error in DELETE /comments/:id', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
 app.post('/books/:id/rate', async (req, res) => {
   const bookId = parseInt(req.params.id);
   const { rating } = req.body;
@@ -277,6 +345,8 @@ app.post('/books/:id/rate', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 
 // Start the server
