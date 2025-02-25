@@ -33,7 +33,7 @@ app.get('/books', async (req, res) => {
         total_votes,
         average_rating,
         categories(name), 
-        comments(comment_text),
+        comments(id, comment_text),
         age_range
       `);
 
@@ -66,7 +66,7 @@ app.get('/books/:id', async (req, res) => {
         total_votes,
         average_rating,
         categories(name),
-        comments(comment_text),
+        comments(id, comment_text),
         age_range
       `)
       .eq('id', bookId)
@@ -164,7 +164,7 @@ app.post('/books/:id/comments', async (req, res) => {
         total_votes,
         average_rating,
         categories(name),
-        comments(comment_text),
+        comments(id, comment_text),
         age_range
       `)
       .eq('id', bookId)
@@ -331,7 +331,7 @@ app.post('/books/:id/rate', async (req, res) => {
         total_votes,
         average_rating,
         categories(name),
-        comments(comment_text),
+        comments(id, comment_text),
         age_range
       `)
       .eq('id', bookId)
